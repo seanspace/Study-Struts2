@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+	<!-- 配置Struts可以受理的请求的扩展名,默认情况是可以 -->
+	<constant name="struts.action.extension" value="action,do,"></constant>
+	<!-- 配置动态方法调用开关. -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true"></constant>
+	<!-- 打开ognl静态方法调用的限制 -->
+	<constant name="struts.ognl.allowStaticMethodAccess" value="true"></constant>
+	<!-- 修改当前Struts应用的主题(表单)xhtml,simple,css -->
+	<constant name="struts.ui.theme" value="xhtml"></constant>
+	<!-- 修改国际化资源配置文件 -->
+	<constant name="struts.custom.i18n.resources" value="i18n"></constant>
+	
+	
+	<!-- package:包.struts使用package来组织模块.
+		 name属性:必须.用去其他包引用当前包.
+		 extends:当前包继承哪个包.继承的包,可以继承其中所用的配置.通常继承:struts-default
+		 namespace:命名空间.相当于一个虚拟的路径.请求action路径时需加上这个值;默认值"/"
+		 http://localhost:8080/contextPath/namespace/actionName.action
+	 -->
+	<package name="helloWorld" extends="struts-default" namespace="/helloworld">
+
+	
+		<!-- 全局声明异常,具体作用范围是本package还是所有package? **测试发现,只用本package中的action有效. -->	
+		<global-results>
+			<result name="input">/WEB-INF/pages/input.jsp</result>
+		</global-results>
+		<global-exception-mappings>
+			<exception-mapping result="input" exception="java.lang.ArithmeticException"></exception-mapping>
+		</global-exception-mappings>
+	
+		<!-- 配置一个Action: 一个struts2请求就是一个Action
+			 name:对应一个struts2的请求的名字(或对一个ServletPath,但去除/和扩展名),不含扩展名.
+			 
+			   默认执行类:class:com.opensymphony.xwork2.ActionSupport
+			   默认执行方法:method:execute
+			 result:结果.
+		 -->
+		<action name="product-input">
+			<!-- > name:action类执行方法的返回值:字符串.
+				   	不写默认值是:success; 
+				 	多个result标签通过name区分.
+				 >	dispatcher:请求结果类型.默认值为:dispatcher(请求转发):可以在struts-default.xml文件中找对应值.
+			-->
+			<result name="success" type="dispatcher">/WEB-INF/pages/input.jsp</result>
+		</action>
+		
+		<action name="product-save" class="com.bin.helloworld.Product" method="save">
+			<exception-mapping result="input" exception="java.lang.ArithmeticException"></exception-mapping>
+			<result name="details">/WEB-INF/pages/details.jsp</result>
+			<result name="input">/WEB-INF/pages/input.jsp</result>
+			
+		</action>
+		
+		<action name="testTag" class="com.bin.helloworld.Product" method="testTag">
+			<result>/tag/common-tag.jsp</result>
+		</action>
+		
+		<action name="save" class="com.bin.tag.UserAction" method="save">
+			<result name="input">/tag/form-tag.jsp</result>
+		</action>
+	</package>
+	
+	<package name="webresource" extends="struts-default" namespace="/webresource">
+		<action name="TestActionContext" class="com.bin.action.webresource.TestActionContextAction">
+			<result>/webresource/test-actionContext.jsp</result>
+		</action>
+		<action name="TestAware" class="com.bin.action.webresource.TestAwareAction">
+			<result>/webresource/test-aware.jsp</result>
+		</action>
+		<action name="TestServletActionContext" class="com.bin.action.webresource.TestServletActionContextAction">
+			<result>/webresource/test-servletActionContext.jsp</result>
+		</action>
+		<action name="TestServletAware" class="com.bin.action.webresource.TestServletAwareAction">
+			<result>/webresource/test-TestServletAware.jsp</result>
+		</action>
+		
+	</package>
+	
+	<package name="app" extends="struts-default" namespace="/app">
+		<action name="login-ui">
+			<result>/app/login/login.jsp</result>
+		</action>
+		
+		<action name="user-login" class="com.bin.action.app.UserAction">
+			<result name="login-success">/app/login/login-success.jsp</result>
+		</action>
+		<action name="user-logout" class="com.bin.action.app.UserAction" method="logout">
+			<result name="logout-success">/app/login/login.jsp</result>
+		</action>
+	</package>
+	
+	<package name="root" extends="struts-default">
+		
+		<!-- 
+			配置使用paramsPrepareParamsStack作为默认的拦截器栈.作用范围只有这一个package. 
+			它和defaultStack的区别是,modelDrivenInterceptor执行前后都调用了一次paramsInterceptor
+		-->
+		<!-- <default-interceptor-ref name="paramsPrepareParamsStack"></default-interceptor-ref> -->
+		
+		<!-- 修改 PrepareInterceptor拦截器的属性:alwaysInvokePrepare -->
+		<interceptors>
+			<!-- 自定义拦截器 -->
+			<interceptor name="helloInterceptor" class="com.bin.interceptor.MyInterceptor" ></interceptor>
+		
+			<interceptor-stack name="atguigustack">
+				<interceptor-ref name="paramsPrepareParamsStack">
+					<param name="prepare.alwaysInvokePrepare">false</param>
+				</interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+				
+		<!-- 引用修改过的栈. -->
+		<default-interceptor-ref name="atguigustack"></default-interceptor-ref>
+<!-- 	
+		修改文件上传栈的属性
+		<interceptors>
+			<interceptor-stack name="uploadStack">
+				<interceptor-ref name="defaultStack">
+				
+				maximumSize (optional) -  默认的最大值2M,上传的单个文件的最大值.字节为单位
+				allowedTypes (optional) - 允许的类型,使用逗号分割. 
+				allowedExtensions (optional) -  允许的扩展名.
+				
+					<param name="fileUpload.maximumSize">2000</param>
+					<param name="fileUpload.allowedTypes">text/html,text/xml</param>
+					<param name="fileUpload.allowedExtensions">html,dtd,xml</param>
+				</interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		使用文件上传栈的新属性
+		<default-interceptor-ref name="uploadStack"></default-interceptor-ref>
+
+ -->
+		<action name="test-result" class="com.bin.action.actionsupport.TestResultAction">
+			<result name="success" type="dispatcher">/test-result/success.jsp</result>
+			<!-- 这个redirect也可以便捷的实现redirectAction -->
+			<result name="login" type="redirect">/test-result/login.jsp</result>
+			<!-- 重定向到一个Action -->
+			<result name="index" type="redirectAction">
+				<param name="actionName">testAction</param>
+				<param name="namespace">/atguigu</param>
+			</result>
+			<!-- 转发到一个Action -->
+			<result name="test" type="chain">
+				<param name="actionName">testAction</param>
+				<param name="namespace">/atguigu</param>
+			</result>
+			
+		</action>
+		
+		<!-- 精确匹配这个,save的是时候. -->
+		<action name="UserAction-save" class="com.bin.action.wildcard.UserAction" method="test">
+			<result name="query-success">/wildcard/success.jsp</result>
+		</action>
+		<!-- update时有多个匹配.则谁在前,谁执行.所以尽量减少这种没有前缀的写法. -->
+		<action name="*-update1" class="com.bin.action.wildcard.UserAction" method="test">
+			<result name="query-success">/wildcard/success.jsp</result>
+		</action>
+		<!-- 通配符 -->
+		<action name="UserAction-*" class="com.bin.action.wildcard.UserAction" method="{1}">
+			<result name="{1}-success">/wildcard/success.jsp</result>
+		</action>
+		
+		<action name="emp-*"
+			class="com.bin.crud.EmployeeAction"
+			method="{1}" >
+			<result name="{1}">/CRUD/emp-{1}.jsp</result>
+			<!-- 删除的响应类型,所以用精确匹配覆盖上面那个响应. -->
+			<result name="success" type="redirectAction">emp-list</result>
+		</action>
+		
+		<!-- 类型转换 -->
+		<action name="testConversion" class="com.bin.conversion.ConversionAction">
+			<result>/success.jsp</result>
+			<result name="input">/conversion/index.jsp</result>
+		</action>
+		
+		<!-- 测试复杂属性,表单的属性的属性 -->
+		<action name="testComplextProperty" class="com.bin.complext.TestComplextPropertyAction">
+			<result>/success.jsp</result>
+			<result name="input">/complext/complext-property.jsp</result>
+		</action>
+		
+		<!-- 国际化 -->
+		<action name="testI18n" class="com.bin.i18n.TestI18nAction">
+			<result>/i18n/i18n.jsp</result>
+		</action>
+		
+		<!-- 验证 -->
+		<action name="testValidation" class="com.bin.validation.TestValidationAction">
+			<result>/success.jsp</result>
+			<!-- 若验证失败,转向input -->
+			<result name="input">/validation/validation.jsp</result>
+		</action>
+		<action name="testValidation2" class="com.bin.validation.TestValidationAction">
+			<result>/success.jsp</result>
+			<!-- 若验证失败,转向input -->
+			<result name="input">/validation/validation2.jsp</result>
+		</action>
+		
+		<!-- 文件上传 -->
+		<action name="testUpload" class="com.bin.upload.UploadAction">
+			<result>/success.jsp</result>
+			<result name="input">/file-upload/upload.jsp</result>
+		</action>
+		
+		<action name="testDownload" class="com.bin.download.DownloadAction">
+			<result type="stream">
+				<!-- 这些参数,在Action中指定getter方法就行了.这里不需配置,就能自动获取.有些参数,按默认值就行了. -->
+			</result>
+		</action>
+		
+		
+		<action name="testToken" class="com.bin.token.TokenAction">
+			<interceptor-ref name="helloInterceptor"></interceptor-ref>
+			
+			<interceptor-ref name="token"></interceptor-ref>
+			<interceptor-ref name="defaultStack"></interceptor-ref>
+			<result>/success.jsp</result>
+			<result name="invalid.token">/token-error.jsp</result>
+		</action>
+		
+	</package>
+	
+	<package name="testPackage" namespace="/atguigu" extends="struts-default">
+			<action name="testAction" class="com.bin.action.actionsupport.TestResultAction">
+				<result name="success" type="dispatcher">/test-result/success.jsp</result>
+			</action>
+	</package>
+</struts>

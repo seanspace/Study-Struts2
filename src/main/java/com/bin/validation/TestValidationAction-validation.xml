@@ -1,0 +1,35 @@
+<!DOCTYPE validators PUBLIC
+        "-//Apache Struts//XWork Validator 1.0.2//EN"
+        "http://struts.apache.org/dtds/xwork-validator-1.0.2.dtd">
+<!-- 这个是本Action各个请求共用的验证规则 -->
+<validators>
+
+
+	<!-- 针对于age属性进行验证 :基于字段的验证-->
+	<field name="age">
+		<!-- 设置短路验证:若当前验证没有通过,不再进行下面的验证. -->
+		<field-validator type="conversion" short-circuit="true">
+			<message>错误</message>
+		</field-validator>
+	
+		<field-validator type="int">
+			<param name="min">100</param>
+			<param name="max">150</param>
+			<message>Age needs to be between ${min} and ${max}</message>
+		</field-validator>
+	</field>
+	
+	<field name="count">
+		<field-validator type="int">
+			<param name="min">1</param>
+			<param name="max">10</param>
+			<message key="error.int"></message>
+		</field-validator>
+	</field>
+	
+     <validator type="expression">
+        <param name="expression">![CDATA][password=password2]</param>
+        <message>Password is not equals password2</message>
+     </validator>
+	
+</validators>
